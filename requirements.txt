@@ -10,6 +10,9 @@ opencv-python>=4.9.0
 psutil>=5.9.0
 numpy>=1.24.0
 beautifulsoup4
+chromadb>=0.4.24 # Added for vector database
+sentence-transformers>=2.2.2 # Added for embedding generation
+onnxruntime>=1.16.3 # Often a dependency for sentence-transformers
 
 # Database dependencies
 psycopg2-binary>=2.9.9

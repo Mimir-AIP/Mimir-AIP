@@ -1,0 +1,26 @@
+# Test configuration for Mimir-AIP
+settings:
+  pipeline_directory: "src/pipelines" # Relative to project root where main.py is usually run
+  output_directory: "output_test"    # Test-specific output
+  log_level: "INFO"                  # Or DEBUG for more verbose test output
+
+  # ChromaDB specific settings for tests
+  chromadb_path: "temp_chroma_test_db" # Relative to project root, will be created/used by tests
+  default_embedding_model: "sentence-transformers/all-MiniLM-L6-v2" # Consistent model
+
+plugins:
+  # For this test, we assume all necessary plugins are enabled by default
+  # or that PluginManager loads them correctly.
+  # If explicit enabling is needed by your PluginManager's default behavior:
+  # enabled:
+  #   - "Data_Processing.ContextSetter"
+  #   - "Data_Processing.EmbeddingGenerator"
+  #   - "VectorDatabases.ChromaDB"
+  #   - "Data_Processing.ContextLogger"
+  disabled: []
+
+pipelines:
+  - name: "Test Semantic Search Demo"
+    file: "src/pipelines/semantic_search_example.yaml" # Path relative to project root
+    enabled: true
+```

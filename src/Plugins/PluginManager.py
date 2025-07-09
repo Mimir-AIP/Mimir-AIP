@@ -32,7 +32,7 @@ class PluginManager:
         '''
         self.plugins_path = plugins_path
         self.plugins: Dict[str, Dict[str, object]] = {}
-        self.plugin_types = ["AIModels", "Data_Processing", "Input", "Output", "Web"]
+        self.plugin_types = ["AIModels", "Data_Processing", "Input", "Output", "Web", "VectorDatabases"]
         self.warnings: Set[str] = set()
         self.config = config or {}
         print(f"[DEBUG PluginManager] self.config on init: {self.config}")

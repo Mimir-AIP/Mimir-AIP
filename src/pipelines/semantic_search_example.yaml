@@ -1,0 +1,138 @@
+# Example Mimir-AIP Pipeline for Semantic Search using ChromaDB
+
+pipelines:
+  - name: "Semantic Search Demo with ChromaDB"
+    enabled: true # Set to true to run this pipeline
+    description: "Demonstrates generating embeddings and using ChromaDB for semantic search."
+    steps:
+      # 1. Setup Initial Data (e.g., a list of documents)
+      - name: "Setup Sample Documents"
+        plugin: "Data_Processing.ContextSetter"
+        config:
+          context_values:
+            sample_texts:
+              - "The quick brown fox jumps over the lazy dog."
+              - "Mimir-AIP is a versatile pipeline orchestration tool."
+              - "ChromaDB provides local vector storage and search."
+              - "Large language models are transforming AI."
+              - "Semantic search helps find relevant information based on meaning."
+            sample_ids: ["doc1", "doc2", "doc3", "doc4", "doc5"]
+            sample_metadatas:
+              - {"source": "common_phrases", "category": "animals"}
+              - {"source": "mimir_docs", "category": "software"}
+              - {"source": "vectordb_docs", "category": "software"}
+              - {"source": "ai_concepts", "category": "technology"}
+              - {"source": "search_tech", "category": "technology"}
+
+      # 2. Generate Embeddings for the documents
+      - name: "Generate Document Embeddings"
+        plugin: "Data_Processing.EmbeddingGenerator"
+        config:
+          input_texts_context_key: "sample_texts"
+          output_embeddings_context_key: "document_embeddings"
+          # embedding_model: "all-MiniLM-L6-v2" # Optional: Uses default from config.yaml or plugin default
+
+      # 3. Add documents and their embeddings to ChromaDB
+      # This step will create the collection if it doesn't exist.
+      - name: "Index Documents in ChromaDB"
+        plugin: "VectorDatabases.ChromaDB"
+        config:
+          action: "add"
+          collection_name: "demo_semantic_collection"
+          # chroma_path: "my_custom_chroma_db" # Optional: Uses default from config.yaml or plugin default "mimir_chroma_db"
+          # client_type: "ephemeral" # Optional: defaults to "persistent"
+          documents_context_key: "sample_texts"         # Store original text
+          embeddings_context_key: "document_embeddings" # Use pre-computed embeddings
+          ids_context_key: "sample_ids"                 # Provide IDs
+          metadatas_context_key: "sample_metadatas"     # Provide metadata
+          output_context_key: "chroma_add_report"
+
+      # 4. Log the result of the add operation
+      - name: "Log Indexing Status"
+        plugin: "Data_Processing.ContextLogger"
+        config:
+          keys_to_log: ["chroma_add_report"]
+          log_level: "INFO"
+
+      # 5. Count items in the collection
+      - name: "Count Items in Collection"
+        plugin: "VectorDatabases.ChromaDB"
+        config:
+          action: "count_items"
+          collection_name: "demo_semantic_collection"
+          output_context_key: "collection_item_count"
+
+      - name: "Log Collection Count"
+        plugin: "Data_Processing.ContextLogger"
+        config:
+          keys_to_log: ["collection_item_count"]
+          log_level: "INFO"
+
+      # 6. Setup a Search Query
+      - name: "Setup Search Query"
+        plugin: "Data_Processing.ContextSetter"
+        config:
+          context_values:
+            search_query_text: ["find tools for AI pipelines"] # Must be a list
+
+      # 7. Perform Semantic Search
+      - name: "Perform Semantic Search"
+        plugin: "VectorDatabases.ChromaDB"
+        config:
+          action: "query"
+          collection_name: "demo_semantic_collection"
+          query_texts_context_key: "search_query_text"
+          n_results: 2
+          include: ["documents", "distances", "metadatas"] # Specify what to include in results
+          output_context_key: "semantic_search_results"
+
+      # 8. Log the Search Results
+      - name: "Log Search Results"
+        plugin: "Data_Processing.ContextLogger"
+        config:
+          keys_to_log: ["semantic_search_results"]
+          log_level: "INFO"
+
+      # Example: Clean up by deleting the collection (optional)
+      # - name: "Delete Demo Collection"
+      #   plugin: "VectorDatabases.ChromaDB"
+      #   config:
+      #     action: "delete_collection"
+      #     collection_name: "demo_semantic_collection"
+      #     output_context_key: "delete_status"
+      #
+      # - name: "Log Deletion Status"
+      #   plugin: "Data_Processing.ContextLogger"
+      #   config:
+      #     keys_to_log: ["delete_status"]
+      #     log_level: "INFO"
+
+      # Example: List all collections (optional)
+      # - name: "List All ChromaDB Collections"
+      #   plugin: "VectorDatabases.ChromaDB"
+      #   config:
+      #     action: "list_collections"
+      #     output_context_key: "all_collections"
+      #
+      # - name: "Log All Collections"
+      #   plugin: "Data_Processing.ContextLogger"
+      #   config:
+      #     keys_to_log: ["all_collections"]
+      #     log_level: "INFO"
+
+# Global configuration in config.yaml might include:
+# settings:
+#   pipeline_directory: "src/pipelines"
+#   output_directory: "output"
+#   log_level: "INFO"
+#   chromadb_path: "mimir_vector_storage" # Default persistent path for ChromaDB
+#   default_embedding_model: "all-MiniLM-L6-v2"
+#
+# plugins:
+#   enabled:
+#     - "Data_Processing.ContextSetter"
+#     - "Data_Processing.EmbeddingGenerator"
+#     - "VectorDatabases.ChromaDB"
+#     - "Data_Processing.ContextLogger"
+#   # disabled: []
+```
